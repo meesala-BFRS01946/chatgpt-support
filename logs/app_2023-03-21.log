@@ -1,0 +1,37 @@
+2023-03-21 20:12:26,576 INFO [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-03-21 20:12:26,576 INFO [33mPress CTRL+C to quit[0m
+2023-03-21 20:12:26,578 INFO  * Restarting with stat
+2023-03-21 20:12:26,745 WARNING  * Debugger is active!
+2023-03-21 20:12:26,752 INFO  * Debugger PIN: 214-897-151
+2023-03-21 20:12:34,122 INFO message='Request to OpenAI API' method=post path=https://api.openai.com/v1/completions
+2023-03-21 20:12:34,122 DEBUG api_version=None message='Post details' post_data='{"model": "text-davinci-003", "prompt": " by taking the reference from the following map {\\"tracking details\\": [\\"where is it\\", \\"where is my order\\", \\"can i get my tracking details\\"], \\"cancel order\\": [\\"cancel my order\\", \\"cancel it\\"], \\"greeting\\": [\\"hi\\", \\"hello\\", \\"hey\\", \\"hola\\", \\"how are you\\", \\"whats up\\"]} , please map the following text hii to the one of the intent in the following intents [\'tracking details\', \'cancel order\', \'greeting\'] and return NULL if no intents are matched", "temperature": 0.314, "max_tokens": 256, "top_p": 0.54, "frequency_penalty": 0.44, "presence_penalty": 0.17}'
+2023-03-21 20:12:34,125 DEBUG Starting new HTTPS connection (1): api.openai.com:443
+2023-03-21 20:12:35,780 DEBUG https://api.openai.com:443 "POST /v1/completions HTTP/1.1" 200 275
+2023-03-21 20:12:35,781 INFO message='OpenAI API response' path=https://api.openai.com/v1/completions processing_ms=530 response_code=200
+2023-03-21 20:12:35,782 DEBUG body='{"id":"cmpl-6wXU3g6zuxHH85LU1z6SN2DeUAqlj","object":"text_completion","created":1679409755,"model":"text-davinci-003","choices":[{"text":"\\n\\ngreeting","index":0,"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":118,"completion_tokens":5,"total_tokens":123}}\n' headers="{'Date': 'Tue, 21 Mar 2023 14:42:35 GMT', 'Content-Type': 'application/json', 'Content-Length': '275', 'Connection': 'keep-alive', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache, must-revalidate', 'Openai-Model': 'text-davinci-003', 'Openai-Organization': 'user-mkymzgy4qcndickxofh58jmh', 'Openai-Processing-Ms': '530', 'Openai-Version': '2020-10-01', 'Strict-Transport-Security': 'max-age=15724800; includeSubDomains', 'X-Ratelimit-Limit-Requests': '60', 'X-Ratelimit-Limit-Tokens': '150000', 'X-Ratelimit-Remaining-Requests': '59', 'X-Ratelimit-Remaining-Tokens': '149744', 'X-Ratelimit-Reset-Requests': '1s', 'X-Ratelimit-Reset-Tokens': '102ms', 'X-Request-Id': '09eeab2b0ae301e46a6fd7b9c9c4a808'}" message='API response body'
+2023-03-21 20:12:35,839 INFO 127.0.0.1 - - [21/Mar/2023 20:12:35] "[35m[1mPOST / HTTP/1.1[0m" 500 -
+2023-03-21 20:13:15,027 INFO  * Detected change in '/home/meesalasaidhanush/Desktop/chatgpt/app.py', reloading
+2023-03-21 20:13:15,105 INFO  * Restarting with stat
+2023-03-21 20:13:15,287 WARNING  * Debugger is active!
+2023-03-21 20:13:15,293 INFO  * Debugger PIN: 120-977-237
+2023-03-21 20:13:16,307 INFO  * Detected change in '/home/meesalasaidhanush/Desktop/chatgpt/app.py', reloading
+2023-03-21 20:13:16,371 INFO  * Restarting with stat
+2023-03-21 20:13:16,568 WARNING  * Debugger is active!
+2023-03-21 20:13:16,574 INFO  * Debugger PIN: 130-275-132
+2023-03-21 20:13:20,598 INFO  * Detected change in '/home/meesalasaidhanush/Desktop/chatgpt/app.py', reloading
+2023-03-21 20:13:20,655 INFO  * Restarting with stat
+2023-03-21 20:13:20,881 WARNING  * Debugger is active!
+2023-03-21 20:13:20,888 INFO  * Debugger PIN: 168-612-252
+2023-03-21 20:13:21,900 INFO  * Detected change in '/home/meesalasaidhanush/Desktop/chatgpt/app.py', reloading
+2023-03-21 20:13:21,956 INFO  * Restarting with stat
+2023-03-21 20:13:22,166 WARNING  * Debugger is active!
+2023-03-21 20:13:22,173 INFO  * Debugger PIN: 862-816-395
+2023-03-21 20:13:25,187 INFO message='Request to OpenAI API' method=post path=https://api.openai.com/v1/completions
+2023-03-21 20:13:25,187 DEBUG api_version=None message='Post details' post_data='{"model": "text-davinci-003", "prompt": " by taking the reference from the following map {\\"tracking details\\": [\\"where is it\\", \\"where is my order\\", \\"can i get my tracking details\\"], \\"cancel order\\": [\\"cancel my order\\", \\"cancel it\\"], \\"greeting\\": [\\"hi\\", \\"hello\\", \\"hey\\", \\"hola\\", \\"how are you\\", \\"whats up\\"]} , please map the following text hii to the one of the intent in the following intents [\'tracking details\', \'cancel order\', \'greeting\'] and return NULL if no intents are matched", "temperature": 0.314, "max_tokens": 256, "top_p": 0.54, "frequency_penalty": 0.44, "presence_penalty": 0.17}'
+2023-03-21 20:13:25,190 DEBUG Starting new HTTPS connection (1): api.openai.com:443
+2023-03-21 20:13:26,725 DEBUG https://api.openai.com:443 "POST /v1/completions HTTP/1.1" 200 275
+2023-03-21 20:13:26,726 INFO message='OpenAI API response' path=https://api.openai.com/v1/completions processing_ms=447 response_code=200
+2023-03-21 20:13:26,726 DEBUG body='{"id":"cmpl-6wXUsMyNPhWTj71dBDpD99kBWHW4c","object":"text_completion","created":1679409806,"model":"text-davinci-003","choices":[{"text":"\\n\\ngreeting","index":0,"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":118,"completion_tokens":5,"total_tokens":123}}\n' headers="{'Date': 'Tue, 21 Mar 2023 14:43:26 GMT', 'Content-Type': 'application/json', 'Content-Length': '275', 'Connection': 'keep-alive', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache, must-revalidate', 'Openai-Model': 'text-davinci-003', 'Openai-Organization': 'user-mkymzgy4qcndickxofh58jmh', 'Openai-Processing-Ms': '447', 'Openai-Version': '2020-10-01', 'Strict-Transport-Security': 'max-age=15724800; includeSubDomains', 'X-Ratelimit-Limit-Requests': '60', 'X-Ratelimit-Limit-Tokens': '150000', 'X-Ratelimit-Remaining-Requests': '59', 'X-Ratelimit-Remaining-Tokens': '149743', 'X-Ratelimit-Reset-Requests': '1s', 'X-Ratelimit-Reset-Tokens': '102ms', 'X-Request-Id': 'd17933c554cc81fd8eb2794923538c0f'}" message='API response body'
+2023-03-21 20:13:26,727 INFO Received text: hii, Predicted intent: greeting
+2023-03-21 20:13:26,727 INFO 127.0.0.1 - - [21/Mar/2023 20:13:26] "POST / HTTP/1.1" 200 -

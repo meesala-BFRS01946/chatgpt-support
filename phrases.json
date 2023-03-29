@@ -1,0 +1,8 @@
+{
+    "tracking details":["where is it","where is my order","can i get my tracking details"],
+    "cancel order":["cancel my order","cancel it"],
+    "greeting":["hi","hello","hey","hola","how are you","whats up"],
+    "pickup not attempted":["delivery boy didn't come","iam still waiting for pickup","pickup not attempted","no one came to pickup"],
+    "greeting->greeting":["thanks","thank you"]
+}
+    
