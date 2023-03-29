@@ -10,7 +10,7 @@ from intents import intents
 from responses import responses
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = "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"
 
 with open('phrases.json', 'r') as f:
     phrases = json.load(f)
