@@ -12,7 +12,7 @@ from responses import responses
 import translators as ts
 
 load_dotenv()
-openai.api_key = "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"
+openai.api_key = "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"
 
 with open('phrases.json', 'r') as f:
     phrases = json.load(f)
@@ -55,7 +55,8 @@ def pred():
         return jsonify({"response": translate_to_english(greetingfallback()),"intent":intent})
     elif intent == "pickup not attempted":
         return jsonify({"response": "please enter your AWB number","intent":intent})
-    
+    elif intent == "contact support":
+        return jsonify({"response":"You can mail us on support@shiprocket.com","intent":intent})
     return jsonify({"response": "sorry i didn't understand can you say that again"})
 
     
