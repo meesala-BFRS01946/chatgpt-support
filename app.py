@@ -12,7 +12,7 @@ from responses import responses
 import translators as ts
 
 load_dotenv()
-openai.api_key = "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"
+openai.api_key = "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"
 
 with open('phrases.json', 'r') as f:
     phrases = json.load(f)
@@ -67,9 +67,9 @@ def tracking_order(awb):
     try:
         if response.status_code == 200:
             data = response.json()
-            r = data["tracking_data"]["shipment_track"][0]["current_status"]
-            rr= responses["track_order"].format(r)
-            return rr
+            #r = data["tracking_data"]["shipment_track"][0]["current_status"]
+            #rr= responses["track_order"].format(r)
+            return data
     except:
         return("Hi, we haven't found any AWB under this category.")
     
