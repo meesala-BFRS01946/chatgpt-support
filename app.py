@@ -69,7 +69,7 @@ def tracking_order(awb):
             data = response.json()
             #r = data["tracking_data"]["shipment_track"][0]["current_status"]
             #rr= responses["track_order"].format(r)
-            return data
+            return str(data)
     except:
         return("Hi, we haven't found any AWB under this category.")
     
