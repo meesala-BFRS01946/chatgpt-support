@@ -3,7 +3,7 @@
     "cancel order":["cancel my order","cancel it"],
     "greeting":["hi","hello","hey","hola","how are you","whats up"],
     "pickup not attempted":["delivery boy didn't come","iam still waiting for pickup","pickup not attempted","no one came to pickup"],
-    "greeting->greeting":["thanks","thank you"],
+    "greeting->greeting":["thanks","thank you","thanks","tq"],
     "contact support":["i want to contact your support team","need help","contact support","can i call you"]
 }
     
