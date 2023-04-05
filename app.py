@@ -12,7 +12,7 @@ from responses import responses
 import translators as ts
 
 load_dotenv()
-openai.api_key = "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"
+openai.api_key = "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"
 
 with open('phrases.json', 'r') as f:
     phrases = json.load(f)
@@ -57,7 +57,7 @@ def pred():
         return jsonify({"response": "please enter your AWB number","intent":intent})
     elif intent == "contact support":
         return jsonify({"response":"You can mail us on support@shiprocket.com","intent":intent})
-    return jsonify({"response": "sorry i didn't understand can you say that again"})
+    return jsonify({"response": create_ticket(text),"intent":"freshwork response"})
 
     
 
@@ -111,6 +111,24 @@ def is_number(input):
     pattern = r'\d{9,}'
     return bool(re.search(pattern, input))
     
+def create_ticket(subject):
+    url = "https://shiprocketdemo.freshdesk.com/api/v2/tickets"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = {
+        "subject": subject,
+        "description": "text not handled by chatgpt",
+        "status": 2,  # 2 is the status code for "Open"
+        "priority": 1,  # 1 is the priority code for "Low"
+        "email": "user@example.com"
+    }
+    auth = ("Ifo1K69EBXPELX1DF5Sg", "x")
+    response = requests.post(url, headers=headers, json=data, auth=auth)
+    if response.status_code == 201:
+        return "Ticket created successfully"
+    else:
+        return "Failed to create ticket"
 
 
 
