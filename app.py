@@ -12,7 +12,7 @@ from responses import responses
 import translators as ts
 
 load_dotenv()
-openai.api_key = "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"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 with open('phrases.json', 'r') as f:
     phrases = json.load(f)
@@ -63,7 +63,7 @@ def pred():
 
 def tracking_order(awb):
     #awb="SRTP8501354758"
-    tracking_url= "https://apiv2.shiprocket.in/v1/tracking/{}".format(awb)
+    tracking_url= os.getenv("TRACKING_URL").format(awb)
     response = requests.get(tracking_url)
     try:
         if response.status_code == 200:
@@ -112,7 +112,7 @@ def is_number(input):
     return bool(re.search(pattern, input))
     
 def create_ticket(subject):
-    url = "https://shiprocketdemo.freshdesk.com/api/v2/tickets"
+    freshwork_endpoint_url = os.getenv("FRESHWORK_ENDPOINT_URL")
     headers = {
         "Content-Type": "application/json"
     }
@@ -123,8 +123,9 @@ def create_ticket(subject):
         "priority": 1,  # 1 is the priority code for "Low"
         "email": "user@example.com"
     }
-    auth = ("Ifo1K69EBXPELX1DF5Sg", "x")
-    response = requests.post(url, headers=headers, json=data, auth=auth)
+    key=os.getenv("FRESHWORKS_API_KEY")
+    auth = (key, "x")
+    response = requests.post(freshwork_endpoint_url, headers=headers, json=data, auth=auth)
     if response.status_code == 201:
         return "Ticket created successfully"
     else:
