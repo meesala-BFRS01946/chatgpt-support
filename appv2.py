@@ -10,10 +10,12 @@ from datetime import datetime
 from intents import intents
 from responses import responses
 import translators as ts
+import langchain
+from langchain.llms import OpenAI, Cohere, HuggingFaceHub
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
+gpt3 = OpenAI(model_name='text-davinci-003')
 with open('phrases.json', 'r') as f:
     phrases = json.load(f)
 
@@ -35,15 +37,9 @@ def pred():
     text=translate_to_english(text)
     mapp = json.dumps(phrases)
     prompt = " by taking the reference from the following map {} , please map the following text {} to the one of the intent in the following intents {} and return NULL if no intents are matched".format(mapp, text, intents)
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=prompt,
-        temperature=0.314,
-        max_tokens=256,
-        top_p=0.54,
-        frequency_penalty=0.44,
-        presence_penalty=0.17)
-    intent = ((response.choices[0].text).strip()).lower()
+    response = gpt3(prompt)
+    intent = response.strip().lower()
+    print(intent)
     logging.info("Received text: {}, Predicted intent: {}".format(text, intent))
     if is_number(text):
         return jsonify({"response":tracking_order(text),"intent":"awb_number"})
@@ -55,8 +51,6 @@ def pred():
         return jsonify({"response": translate_to_english(greetingfallback()),"intent":intent})
     elif intent == "pickup not attempted":
         return jsonify({"response": "please enter your AWB number","intent":intent})
-    # elif intent == "contact support":
-    #     return jsonify({"response":"You can mail us on support@shiprocket.com","intent":intent})
     return jsonify({"response": create_ticket(text),"intent":"freshwork response"})
 
     
@@ -68,8 +62,6 @@ def tracking_order(awb):
     try:
         if response.status_code == 200:
             data = response.json()
-            #r = data["tracking_data"]["shipment_track"][0]["current_status"]
-            #rr= responses["track_order"].format(r)
             return str(data)
     except:
         return("Hi, we haven't found any AWB under this category.")
@@ -79,26 +71,12 @@ def tracking_order(awb):
 #@app.route('/greeting')
 def greeting():
     prompt = "The user had got his query resolved in a e-commerce chatbot , please give reply to the following text as a e-commerce chatbot in english only {} ".format(text)
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=prompt,
-        temperature=0.314,
-        max_tokens=256,
-        top_p=0.54,
-        frequency_penalty=0.44,
-        presence_penalty=0.17)
-    return str((response.choices[0].text).strip())
+    response = gpt3(prompt)
+    return str(response.strip())
 def greetingfallback():
     prompt = "The user had got his query resolved in a e-commerce chatbot , please give reply to the following text as a e-commerce chatbot in english {} ".format(text)
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=prompt,
-        temperature=0.314,
-        max_tokens=256,
-        top_p=0.54,
-        frequency_penalty=0.44,
-        presence_penalty=0.17)
-    return str((response.choices[0].text).strip())
+    response = gpt3(prompt)
+    return str(response.strip())
 
 
 def translate_to_english(textt):
