@@ -12,7 +12,8 @@ from responses import responses
 import translators as ts
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = "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"
+#openai.api_key =os.getenv("OPENAI_API_KEY")
 
 with open('phrases.json', 'r') as f:
     phrases = json.load(f)
@@ -34,7 +35,7 @@ def pred():
     text=data["text"]
     text=translate_to_english(text)
     mapp = json.dumps(phrases)
-    prompt = " by taking the reference from the following map {} , please map the following text {} to the one of the intent in the following intents {} and return NULL if no intents are matched".format(mapp, text, intents)
+    prompt = " by taking the reference from the following dictionary {} , please map the following text {} to the one of the intent in the following intents {} and return NULL if no intents are matched".format(mapp, text, intents)
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
@@ -64,13 +65,20 @@ def pred():
 def tracking_order(awb):
     #awb="SRTP8501354758"
     tracking_url= os.getenv("TRACKING_URL").format(awb)
-    response = requests.get(tracking_url)
+    headers={
+        "Authorization":os.getenv("AUTH_TOKEN")
+    }
+    response = requests.get(tracking_url,headers=headers)
     try:
         if response.status_code == 200:
             data = response.json()
-            #r = data["tracking_data"]["shipment_track"][0]["current_status"]
-            #rr= responses["track_order"].format(r)
-            return str(data)
+            r = data['data']['shipment_status']
+            pattern=r"<a href='(.*?)'"
+            m=re.search(pattern,p)
+            if m:
+                t=m.group(1)
+            rr= responses["track_order"].format(r,t)
+            return rr
     except:
         return("Hi, we haven't found any AWB under this category.")
     
@@ -130,7 +138,26 @@ def create_ticket(subject):
         return "Ticket created successfully , Your Ticket Id : #{}".format(response.json()['id'])
     else:
         return "Failed to create ticket"
-
+def track_ticket(ticket_id):
+    status_dict = {
+    2: 'Open',
+    3: 'Pending',
+    4: 'Resolved',
+    5: 'Closed',
+    6: 'Waiting on Customer',
+    7: 'Waiting on Third Party'
+                 }
+    freshwork_endpoint_url = os.getenv("FRESHWORK_TRACK_ID_ENDPOINT_URL").format(ticket_id)
+    headers = {
+        "Content-Type": "application/json"
+    }
+    key=os.getenv("FRESHWORKS_API_KEY")
+    auth = (key, "x")
+    response = requests.get(freshwork_endpoint_url, headers=headers,auth=auth)
+    if response.status_code == 201:
+        return "The status od your ticket is => {}".format(status_dict[response.json()['status']])
+    else:
+        return "Failed to fetch the status of ticket"
 
 
 
