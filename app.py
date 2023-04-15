@@ -12,8 +12,8 @@ from responses import responses
 import translators as ts
 
 load_dotenv()
-openai.api_key = "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"
-#openai.api_key =os.getenv("OPENAI_API_KEY")
+#openai.api_key = "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"
+openai.api_key =os.getenv("OPENAI_API_KEY")
 
 with open('phrases.json', 'r') as f:
     phrases = json.load(f)
