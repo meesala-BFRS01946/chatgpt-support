@@ -47,7 +47,7 @@ def pred():
     intent = ((response.choices[0].text).strip()).lower()
     logging.info("Received text: {}, Predicted intent: {}".format(text, intent))
     if is_number(text):
-        return jsonify({"response":tracking_order(text),"intent":"awb_number"})
+        return jsonify({"response":tracking_order(text),"intent":"awb_number","more_info":more_tracking_info(text)})
     elif intent == "tracking details":
         return jsonify({"response": "please enter your AWB number","intent":intent})
     elif intent == "greeting":
@@ -73,20 +73,20 @@ def tracking_order(awb):
         if response.status_code == 200:
             data = response.json()
             r = data['data']['shipment_status']
-            pattern=r"<a href='(.*?)'"
-            m=re.search(pattern,p)
-            if m:
-                t=m.group(1)
-            rr= responses["track_order"].format(r,t)
+            rr= responses["track_order"].format(r)
             return rr
     except:
         return("Hi, we haven't found any AWB under this category.")
     
+def more_tracking_info(awb):
+    url=os.getenv("MORE_INFO").format(awb)
+    response=requests.get(url)
+    return(str(response.json()))
 
     
 #@app.route('/greeting')
 def greeting():
-    prompt = "The user had got his query resolved in a e-commerce chatbot , please give reply to the following text as a e-commerce chatbot in english only {} ".format(text)
+    prompt = "Act as a personalized chatbot and your name is SKY , please give reply to the following greeting text in a empathitic way by saying your name  , as a e-commerce chatbot in english only {} ".format(text)
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
