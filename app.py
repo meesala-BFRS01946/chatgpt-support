@@ -12,7 +12,6 @@ from responses import responses
 import translators as ts
 
 load_dotenv()
-#openai.api_key = "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"
 openai.api_key =os.getenv("OPENAI_API_KEY")
 
 with open('phrases.json', 'r') as f:
@@ -47,9 +46,10 @@ def pred():
     intent = ((response.choices[0].text).strip()).lower()
     logging.info("Received text: {}, Predicted intent: {}".format(text, intent))
     if is_number(text):
-        return jsonify({"response":tracking_order(text),"intent":"awb_number","more_info":more_tracking_info(text)})
+        #print(tracking_order(text))
+        return jsonify({"response":awb_info(tracking_order(text)),"intent":"awb_number","more_info":more_tracking_info(text)})
     elif intent == "tracking details":
-        return jsonify({"response": "please enter your AWB number","intent":intent})
+        return jsonify({"response": tracking_no(),"intent":intent})
     elif intent == "greeting":
         return jsonify({"response": translate_to_english(greeting()),"intent":intent})
     elif intent == "greeting->greeting":
@@ -64,7 +64,7 @@ def pred():
 
 def tracking_order(awb):
     #awb="SRTP8501354758"
-    tracking_url= os.getenv("TRACKING_URL").format(awb)
+    tracking_url= os.getenv("MORE_INFO").format(awb)
     headers={
         "Authorization":os.getenv("AUTH_TOKEN")
     }
@@ -72,9 +72,9 @@ def tracking_order(awb):
     try:
         if response.status_code == 200:
             data = response.json()
-            r = data['data']['shipment_status']
+            r = data['tracking_data']['shipment_track'][0]['current_status']
             rr= responses["track_order"].format(r)
-            return rr
+            return r
     except:
         return("Hi, we haven't found any AWB under this category.")
     
@@ -83,10 +83,20 @@ def more_tracking_info(awb):
     response=requests.get(url)
     return(str(response.json()))
 
-    
+def awb_info(status):
+    prompt = "share the current status as {} with the user and ask for any further queries".format(status)
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt=prompt,
+        temperature=0.314,
+        max_tokens=256,
+        top_p=0.54,
+        frequency_penalty=0.44,
+        presence_penalty=0.17)
+    return str((response.choices[0].text).strip()) 
 #@app.route('/greeting')
 def greeting():
-    prompt = "Act as a personalized chatbot and your name is SKY , please give reply to the following greeting text in a empathitic way by saying your name  , as a e-commerce chatbot in english only {} ".format(text)
+    prompt = "Act as a support agent and pick your own indian name , please give reply to the following greeting text in a empathitic way by saying your name  , as a e-commerce chatbot in english only {} ".format(text)
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
@@ -107,7 +117,17 @@ def greetingfallback():
         frequency_penalty=0.44,
         presence_penalty=0.17)
     return str((response.choices[0].text).strip())
-
+def tracking_no():
+    prompt = "Ask the user for order tracking number in a empathetic way"
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt=prompt,
+        temperature=0.314,
+        max_tokens=256,
+        top_p=0.54,
+        frequency_penalty=0.44,
+        presence_penalty=0.17)
+    return str((response.choices[0].text).strip())
 
 def translate_to_english(textt):
   try:
@@ -116,7 +136,7 @@ def translate_to_english(textt):
   except:
     return textt
 def is_number(input):
-    pattern = r'\d{9,}'
+    pattern = r'\d{8,}'
     return bool(re.search(pattern, input))
     
 def create_ticket(subject):
@@ -126,7 +146,7 @@ def create_ticket(subject):
     }
     data = {
         "subject": subject,
-        "description": "text not handled by chatgpt",
+        "description": "freshdesk",
         "status": 2,  # 2 is the status code for "Open"
         "priority": 1,  # 1 is the priority code for "Low"
         "email": "user@example.com"
@@ -135,7 +155,7 @@ def create_ticket(subject):
     auth = (key, "x")
     response = requests.post(freshwork_endpoint_url, headers=headers, json=data, auth=auth)
     if response.status_code == 201:
-        return "Ticket created successfully , Your Ticket Id : #{}".format(response.json()['id'])
+        return "Sorry about the experience , Iam creating a ticket for the issue , our team will reach out to you . Your ticket id is  #{}".format(response.json()['id'])
     else:
         return "Failed to create ticket"
 def track_ticket(ticket_id):
