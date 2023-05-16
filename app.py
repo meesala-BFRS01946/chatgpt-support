@@ -8,11 +8,18 @@ import os
 import logging
 from datetime import datetime
 from intents import intents
-from responses import responses
-import langchain
 from langchain.chains import APIChain
 import translators as ts
 from langchain.llms import OpenAI
+from dotenv import load_dotenv
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.llms import OpenAI
+from langchain.chains import RetrievalQA
+from langchain.document_loaders import TextLoader
+from langchain.document_loaders.csv_loader import CSVLoader
+import pandas as pd
 
 load_dotenv()
 openai.api_key =os.getenv("OPENAI_API_KEY")
@@ -32,7 +39,6 @@ logging.basicConfig(filename=log_filename, level=logging.DEBUG, format='%(asctim
 
 @app.route('/', methods=['POST'])
 def pred():
-    
     global text 
     data =request.get_json()
     text=data["text"]
@@ -60,9 +66,14 @@ def pred():
         return jsonify({"response": translate_to_english(greetingfallback()),"intent":intent})
     elif intent == "pickup not attempted":
         return jsonify({"response": "please enter your AWB number","intent":intent})
-    # elif intent == "contact support":
-    #     return jsonify({"response":"You can mail us on support@shiprocket.com","intent":intent})
-    return jsonify({"response": create_ticket(text),"intent":"freshwork response"})
+    if text=="thanks":
+        return jsonify({"response": "You're welcome!","intent":"greetin"})
+    res=train_doc(text) if len(text.split()) > 2 else "Sorry! We could not find any relevant response for your query."
+    if res.strip()!="NULL":
+        return jsonify({"response": res,"intent":"LLM"})
+    elif res.strip()=="NULL":
+        return jsonify({"response": create_ticket(text),"intent":"freshwork response"})
+    return "no intent matched"
 
 def ask_gpt(prompt):
     response = openai.Completion.create(
@@ -115,7 +126,7 @@ def tracking_no():
 def translate_to_english(textt):
   try:
     result = ts.translate_text(textt, to_language='en')
-    return result
+    return result                          
   except:
     return textt
 def is_number(input):
@@ -123,7 +134,7 @@ def is_number(input):
     return bool(re.search(pattern, input))
     
 def create_ticket(subject):
-    freshwork_endpoint_url = os.getenv("FRESHWORK_ENDPOINT_URL")
+    freshwork_endpoint_url = "https://shiprocket-help.freshdesk.com/api/v2/tickets"
     headers = {
         "Content-Type": "application/json"
     }
@@ -134,7 +145,7 @@ def create_ticket(subject):
         "priority": 1,  # 1 is the priority code for "Low"
         "email": "user@example.com"
     }
-    key=os.getenv("FRESHWORKS_API_KEY")
+    key="t9H18dqTSflPr7xFc7M"
     auth = (key, "x")
     response = requests.post(freshwork_endpoint_url, headers=headers, json=data, auth=auth)
     if response.status_code == 201:
@@ -164,6 +175,21 @@ def track_ticket(ticket_id):
 def send_freshdesk_ticket(id):
     prompt = "Act as a support chatbot of a e-commerce company and convey that you have created a freshdesk ticket for the issue and its tracking id is following {}. make sure that your message is of only 2 lines".format(id)
     return ask_gpt(prompt)
+
+def train_doc(text):
+    query=request.get_json()
+   # loader = TextLoader("FAQ")
+  #  documents = loader.load()
+    loader = CSVLoader(file_path='./FAQ_text_data1.csv',csv_args={'delimiter': ','})
+    data = loader.load()
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    texts = text_splitter.split_documents(data)
+    embeddings = OpenAIEmbeddings()
+    docsearch = Chroma.from_documents(texts, embeddings)
+    qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=docsearch.as_retriever(search_kwargs={"k": 1}))
+    user_q=text
+    query = "give the answer to the user's query .The answers should be given from the Document provided to you and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
+    return qa.run(query)
 
 
 
