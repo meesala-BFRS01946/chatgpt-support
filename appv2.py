@@ -8,10 +8,18 @@ import os
 import logging
 from datetime import datetime
 from intents import intents
-from responses import responses
 import translators as ts
 import langchain
 from langchain.llms import OpenAI, Cohere, HuggingFaceHub
+from dotenv import load_dotenv
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.llms import OpenAI
+from langchain.chains import RetrievalQA
+from langchain.document_loaders import TextLoader
+from langchain.document_loaders.csv_loader import CSVLoader
+import pandas as pd
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -51,6 +59,10 @@ def pred():
         return jsonify({"response": translate_to_english(greetingfallback()),"intent":intent})
     elif intent == "pickup not attempted":
         return jsonify({"response": "please enter your AWB number","intent":intent})
+    
+    res=train_doc(text)
+    if res!="NULL":
+        return jsonify({"response": train_doc(text),"intent":"LLM"})
     return jsonify({"response": create_ticket(text),"intent":"freshwork response"})
 
     
@@ -109,7 +121,20 @@ def create_ticket(subject):
     else:
         return "Failed to create ticket"
 
-
+def train_doc(text):
+    query=request.get_json()
+   # loader = TextLoader("FAQ")
+  #  documents = loader.load()
+    loader = CSVLoader(file_path='./que_ans.csv',csv_args={'delimiter': ','})
+    data = loader.load()
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    texts = text_splitter.split_documents(data)
+    embeddings = OpenAIEmbeddings()
+    docsearch = Chroma.from_documents(texts, embeddings)
+    qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=docsearch.as_retriever(search_kwargs={"k": 1}))
+    user_q=text
+    query = "give the answer to the user's query .The answers should be given from the Document provided to you and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
+    return qa.run(query)
 
 
 
