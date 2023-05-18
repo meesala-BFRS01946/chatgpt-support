@@ -68,9 +68,9 @@ def pred():
         return jsonify({"response": "please enter your AWB number","intent":intent})
     if text=="thanks":
         return jsonify({"response": "You're welcome!","intent":"greetin"})
-    res=train_doc(text) if len(text.split()) > 2 else "Sorry! We could not find any relevant response for your query."
+    res=train_doc(text) if len(text.split()) > 2 else "NULL"
     if res.strip()!="NULL":
-        return jsonify({"response": res,"intent":"LLM"})
+        return jsonify({"response": process_text(res),"intent":"LLM"})
     elif res.strip()=="NULL":
         return jsonify({"response": create_ticket(text),"intent":"freshwork response"})
     return "no intent matched"
@@ -118,7 +118,7 @@ def greeting():
     prompt = "Act as a support agent and pick a indian name and that will be your name when you speak to the user , please give greeting to the following  text in a empathitic way , as a e-commerce chatbot in english only {} ".format(text)
     return ask_gpt(prompt)
 def greetingfallback():
-    prompt = "The user had got his query resolved in a e-commerce chatbot , please give reply to the following text as a e-commerce chatbot in english {} ".format(text)
+    prompt = "The user had got his query resolved in a e-commerce chatbot , please give reply to the following text as a e-commerce chatbot in english.Dont greet the user again since you have greeted at starting {} ".format(text)
     return ask_gpt(prompt)
 def tracking_no():
     prompt = "Ask the user for order tracking number in a friendly way"
@@ -188,10 +188,22 @@ def train_doc(text):
     docsearch = Chroma.from_documents(texts, embeddings)
     qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=docsearch.as_retriever(search_kwargs={"k": 1}))
     user_q=text
-    query = "give the answer to the user's query .The answers should be given from the Document provided to you and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
+    query = "give the answer to the user's query from the embeddings what you have got trained.The answers should be given from the Document provided to you  and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
     return qa.run(query)
 
-
+def process_text(text):
+    prompt="please convert the following text into array of strings . Make sure that it wont lose its semantic meaning and if it is one liner make the entire string as a single array object Note: you have to return only array of strings {}".format(text)
+    inp_text=ask_gpt(prompt)
+    print(inp_text)
+    if inp_text[0] =='[':
+        return inp_text
+    result = re.findall(r'\[.*?\]', inp_text)
+    print(result)
+    if result:
+        extracted_string = result[0]
+    else:
+        extracted_string = ["I apologize, but I'm having difficulty understanding your input. Could you please rephrase or provide more context so that I can assist you better?"]
+    return extracted_string
 
 if __name__ == '__main__':
     app.run(debug=True)
