@@ -14,7 +14,7 @@ from langchain.llms import OpenAI, Cohere, HuggingFaceHub
 from dotenv import load_dotenv
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter
 from langchain.llms import OpenAI
 from langchain.chains import RetrievalQA
 from langchain.document_loaders import TextLoader
@@ -127,13 +127,14 @@ def train_doc(text):
   #  documents = loader.load()
     loader = CSVLoader(file_path='./que_ans.csv',csv_args={'delimiter': ','})
     data = loader.load()
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     texts = text_splitter.split_documents(data)
     embeddings = OpenAIEmbeddings()
     docsearch = Chroma.from_documents(texts, embeddings)
-    qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=docsearch.as_retriever(search_kwargs={"k": 1}))
+    qa = RetrievalQA.from_chain_type(llm=OpenAI(batch_size=5), chain_type="map_reduce", retriever=docsearch.as_retriever(search_kwargs={"k": 1}))
     user_q=text
-    query = "give the answer to the user's query .The answers should be given from the Document provided to you and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
+    # query = "give the answer to the user's query .The answers should be given from the Document provided to you and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
+    query = "The user's query is:: {}. Generate a response based on the user's question. Remember that all the questions are going to be in context of the initial prompt only, respond with I'm not sure if any question is out of context but do not mislead the user.If the answer contains HTML code, convert it to human-readable format. Rephrase the response to make it more attractive, add spaces and line breaks wherever necessary, remove any \n or \t or any <> from your response, if the answer is in points try to list each point in a seperate line. And make sure to omit any references to image links. ENSURE that the meaning isnt lost!".format(user_q)
     return qa.run(query)
 
 
