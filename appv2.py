@@ -35,6 +35,11 @@ if not os.path.exists(logs_folder):
 log_filename = logs_folder + "/app_" + datetime.now().strftime("%Y-%m-%d") + ".log"
 logging.basicConfig(filename=log_filename, level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 
+@app.before_first_request
+def initialize_variables():
+    # Initialising the trained_model once
+    app.config['trained_model'] = train_doc()
+
 
 @app.route('/', methods=['POST'])
 def pred():
@@ -60,9 +65,10 @@ def pred():
     elif intent == "pickup not attempted":
         return jsonify({"response": "please enter your AWB number","intent":intent})
     
-    res=train_doc(text)
+    res=train_doc()
+    res = gpt_response(text)
     if res!="NULL":
-        return jsonify({"response": train_doc(text),"intent":"LLM"})
+        return jsonify({"response": gpt_response(text),"intent":"LLM"})
     return jsonify({"response": create_ticket(text),"intent":"freshwork response"})
 
     
@@ -120,11 +126,15 @@ def create_ticket(subject):
         return "Ticket created successfully , Your Ticket Id : #{}".format(response.json()['id'])
     else:
         return "Failed to create ticket"
+    
+def gpt_response(text):
+    trained_model = app.config['qa']
+    user_q=text
+    query = "give the answer to the user's query .The answers should be given from the Document provided to you and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
+    return trained_model.run(query)
 
-def train_doc(text):
+def train_doc():
     query=request.get_json()
-   # loader = TextLoader("FAQ")
-  #  documents = loader.load()
     loader = CSVLoader(file_path='./que_ans.csv',csv_args={'delimiter': ','})
     data = loader.load()
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
@@ -132,9 +142,7 @@ def train_doc(text):
     embeddings = OpenAIEmbeddings()
     docsearch = Chroma.from_documents(texts, embeddings)
     qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=docsearch.as_retriever(search_kwargs={"k": 1}))
-    user_q=text
-    query = "give the answer to the user's query .The answers should be given from the Document provided to you and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
-    return qa.run(query)
+    return qa
 
 
 
