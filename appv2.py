@@ -20,6 +20,8 @@ from langchain.chains import RetrievalQA
 from langchain.document_loaders import TextLoader
 from langchain.document_loaders.csv_loader import CSVLoader
 import pandas as pd
+from constants import *
+from helpers import *
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -35,6 +37,11 @@ if not os.path.exists(logs_folder):
 log_filename = logs_folder + "/app_" + datetime.now().strftime("%Y-%m-%d") + ".log"
 logging.basicConfig(filename=log_filename, level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 
+@app.before_first_request
+def initialize_variables():
+    # Initialising the trained_model once
+    app.config['trained_model'] = train_doc()
+
 
 @app.route('/', methods=['POST'])
 def pred():
@@ -44,7 +51,7 @@ def pred():
     text=data["text"]
     text=translate_to_english(text)
     mapp = json.dumps(phrases)
-    prompt = " by taking the reference from the following map {} , please map the following text {} to the one of the intent in the following intents {} and return NULL if no intents are matched".format(mapp, text, intents)
+    prompt = INITIAL_PROMPT.format(mapp, text, intents)
     response = gpt3(prompt)
     intent = response.strip().lower()
     print(intent)
@@ -60,71 +67,25 @@ def pred():
     elif intent == "pickup not attempted":
         return jsonify({"response": "please enter your AWB number","intent":intent})
     
-    res=train_doc(text)
+    res = gpt_response(text)
     if res!="NULL":
         return jsonify({"response": train_doc(text),"intent":"LLM"})
     return jsonify({"response": create_ticket(text),"intent":"freshwork response"})
 
     
-
-def tracking_order(awb):
-    #awb="SRTP8501354758"
-    tracking_url= os.getenv("TRACKING_URL").format(awb)
-    response = requests.get(tracking_url)
-    try:
-        if response.status_code == 200:
-            data = response.json()
-            return str(data)
-    except:
-        return("Hi, we haven't found any AWB under this category.")
-    
-
-    
 #@app.route('/greeting')
 def greeting():
-    prompt = "The user had got his query resolved in a e-commerce chatbot , please give reply to the following text as a e-commerce chatbot in english only {} ".format(text)
+    prompt = GREETING_PROMPT.format(text)
     response = gpt3(prompt)
     return str(response.strip())
+
 def greetingfallback():
-    prompt = "The user had got his query resolved in a e-commerce chatbot , please give reply to the following text as a e-commerce chatbot in english {} ".format(text)
+    prompt = GREETING_PROMPT_FALLBACK.format(text)
     response = gpt3(prompt)
     return str(response.strip())
 
 
-def translate_to_english(textt):
-  try:
-    result = ts.translate_text(textt, to_language='en')
-    return result
-  except:
-    return textt
-def is_number(input):
-    pattern = r'\d{9,}'
-    return bool(re.search(pattern, input))
-    
-def create_ticket(subject):
-    freshwork_endpoint_url = os.getenv("FRESHWORK_ENDPOINT_URL")
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = {
-        "subject": subject,
-        "description": "text not handled by chatgpt",
-        "status": 2,  # 2 is the status code for "Open"
-        "priority": 1,  # 1 is the priority code for "Low"
-        "email": "user@example.com"
-    }
-    key=os.getenv("FRESHWORKS_API_KEY")
-    auth = (key, "x")
-    response = requests.post(freshwork_endpoint_url, headers=headers, json=data, auth=auth)
-    if response.status_code == 201:
-        return "Ticket created successfully , Your Ticket Id : #{}".format(response.json()['id'])
-    else:
-        return "Failed to create ticket"
-
-def train_doc(text):
-    query=request.get_json()
-   # loader = TextLoader("FAQ")
-  #  documents = loader.load()
+def train_doc():
     loader = CSVLoader(file_path='./que_ans.csv',csv_args={'delimiter': ','})
     data = loader.load()
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
@@ -132,11 +93,13 @@ def train_doc(text):
     embeddings = OpenAIEmbeddings()
     docsearch = Chroma.from_documents(texts, embeddings)
     qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=docsearch.as_retriever(search_kwargs={"k": 1}))
+    return qa
+
+def gpt_response(text):
+    trained_model = app.config['qa']
     user_q=text
-    query = "give the answer to the user's query .The answers should be given from the Document provided to you and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
-    return qa.run(query)
-
-
+    query = FINAL_PROMPT.format(user_q)
+    return trained_model.run(query)
 
 if __name__ == '__main__':
     app.run(debug=True)
