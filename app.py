@@ -36,6 +36,10 @@ if not os.path.exists(logs_folder):
 log_filename = logs_folder + "/app_" + datetime.now().strftime("%Y-%m-%d") + ".log"
 logging.basicConfig(filename=log_filename, level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 
+@app.before_first_request
+def initialize_variables():
+    # Initialising the trained_model once
+    app.config['trained_model'] = train_doc()
 
 @app.route('/', methods=['POST'])
 def pred():
@@ -68,7 +72,7 @@ def pred():
         return jsonify({"response": "please enter your AWB number","intent":intent})
     if text=="thanks":
         return jsonify({"response": "You're welcome!","intent":"greetin"})
-    res=train_doc(text) if len(text.split()) > 2 else "NULL"
+    res=gpt_response(text) if len(text.split()) > 2 else "NULL"
     if res.strip()!="NULL":
         return jsonify({"response": process_text(res),"intent":"LLM"})
     elif res.strip()=="NULL":
@@ -176,7 +180,7 @@ def send_freshdesk_ticket(id):
     prompt = "Act as a support chatbot of a e-commerce company and convey that you have created a freshdesk ticket for the issue and its tracking id is following {}. make sure that your message is of only 2 lines".format(id)
     return ask_gpt(prompt)
 
-def train_doc(text):
+def train_doc():
     query=request.get_json()
    # loader = TextLoader("FAQ")
   #  documents = loader.load()
@@ -187,9 +191,7 @@ def train_doc(text):
     embeddings = OpenAIEmbeddings()
     docsearch = Chroma.from_documents(texts, embeddings)
     qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=docsearch.as_retriever(search_kwargs={"k": 1}))
-    user_q=text
-    query = "give the answer to the user's query from the embeddings what you have got trained.The answers should be given from the Document provided to you  and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
-    return qa.run(query)
+    return qa
 
 def process_text(text):
     prompt="please convert the following text into array of strings . Make sure that it wont lose its semantic meaning and if it is one liner make the entire string as a single array object Note: you have to return only array of strings {}".format(text)
@@ -204,6 +206,12 @@ def process_text(text):
     else:
         extracted_string = ["I apologize, but I'm having difficulty understanding your input. Could you please rephrase or provide more context so that I can assist you better?"]
     return extracted_string
+
+def gpt_response(text):
+    trained_model = app.config['qa']
+    user_q=text
+    query = "give the answer to the user's query .The answers should be given from the Document provided to you and if there is no answer from that document please return 'NULL'.Please ensure to provide the answer in bullet points.The user query is {}".format(user_q)
+    return trained_model.run(query)
 
 if __name__ == '__main__':
     app.run(debug=True)
